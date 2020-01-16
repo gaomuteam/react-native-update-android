@@ -10,21 +10,12 @@ var DownUpdataAndroid = {
     version: string,
     downUrl: string
   ): void {
+        console.warn('downUrl',downUrl)
     RCTDownUpdataAndroid.updataApp(version, downUrl);
   },
-
-  getAppDevice:function(
-    callback:Callback
-  ):void {
-    RCTDownUpdataAndroid.getAppDevice(callback);
-  },
-
-  getZwStatu:function(
-        callback:Callback
-    ):void {
-        RCTDownUpdataAndroid.getZwStatu(callback);
-    },
-
+  initDirectory:function(directory:string){
+    RCTDownUpdataAndroid.initDirectory(directory);
+  }
 };
 
 module.exports = DownUpdataAndroid;

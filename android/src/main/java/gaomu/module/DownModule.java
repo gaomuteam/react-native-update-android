@@ -17,14 +17,13 @@ import gaomu.utlis.StartDownApkUtil;
 public class DownModule extends ReactContextBaseJavaModule {
 
 
-     boolean isZw =false;
-     Context context = null;
-    public DownModule(ReactApplicationContext reactContext,boolean isZw){
+    String directoryName ="";
+    StartDownApkUtil downutil;
+    Context context = null;
+    public DownModule(ReactApplicationContext reactContext){
         super(reactContext);
         context = reactContext;
-        this.isZw = isZw;
     }
-
 
     @Override
     public String getName() {
@@ -34,21 +33,13 @@ public class DownModule extends ReactContextBaseJavaModule {
     //更新app
     @ReactMethod
     public void updataApp(String version, String downUrl) {
-        StartDownApkUtil.startDownApk(context,version,downUrl);
+        downutil.startDownApk(context,version,downUrl);
     }
 
-
-    //获取版本信息
     @ReactMethod
-    public void getAppDevice(Callback callback) {
-        DeviceInfo deviceInfo = StartDownApkUtil.getAppDevice(context);
-        callback.invoke(deviceInfo.deviceUuid,deviceInfo.osVersion,deviceInfo.phoneVersion,deviceInfo.versionName);
-    }
-
-
-    @ReactMethod
-    public void getZwStatu(Callback callback) {
-        callback.invoke(isZw);
+    public void initDirectory(String directoryName) {
+        this.directoryName = directoryName;
+        downutil=new StartDownApkUtil(directoryName);
     }
 }
 

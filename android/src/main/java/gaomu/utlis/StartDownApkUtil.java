@@ -7,6 +7,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
+import androidx.core.content.FileProvider;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -26,11 +28,16 @@ import static android.content.Context.TELEPHONY_SERVICE;
 
 public class StartDownApkUtil {
 
+    public static String directoryName ="";
+    public StartDownApkUtil(String directoryName){
+        this.directoryName = directoryName;
+    }
     //开始下载apk
     public static  void startDownApk(Context context, String version, String downUrl){
         if(context == null)  return ;
         PreferencesUtils.putString(context.getApplicationContext(),Config.VERSION_KEY,version);
         PreferencesUtils.putString(context.getApplicationContext(),Config.DOWN_KEY,downUrl);
+        PreferencesUtils.putString(context.getApplicationContext(),Config.DIRECTORYNAME,directoryName);
         checkSdPremission(context);
     }
 
@@ -54,12 +61,12 @@ public class StartDownApkUtil {
                         return ;
                     }
                     //这里已经带版本号检测
-                    File file = new File(sd+"/gaomu/"+version+".apk");
+                    File file = new File(sd+"/"+directoryName+"/"+version+".apk");
                     if(file.exists()){
-                        installAPK(context, Uri.fromFile(file));
+                        installAPK(context, file);
                         return;
                     }else{
-                        File myDir = new File(sd+"/gaomu/");
+                        File myDir = new File(sd+"/"+directoryName+"/");
                         FileUtli.deleteAllFiles(myDir);
                     }
                     stopDownApk(context);
@@ -81,7 +88,7 @@ public class StartDownApkUtil {
                 if(TextUtils.isEmpty(sd)){
                     return ;
                 }
-                File myDir = new File(sd+"/gaomu/");
+                File myDir = new File(sd+"/"+directoryName+"/");
                 FileUtli.deleteAllFiles(myDir);
                 context.getApplicationContext().startService(  //启动服务重新下载
                         new Intent(context.getApplicationContext(),
@@ -102,13 +109,21 @@ public class StartDownApkUtil {
     }
 
     //开始安装
-    public static void installAPK(Context context, Uri apk) {
+    public static void installAPK(Context context, File file) {
         Intent intents = new Intent();
         intents.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intents.setAction(Intent.ACTION_VIEW);
-        intents.setDataAndType(apk, "application/vnd.android.package-archive");
+        Uri uri;
+        if (Build.VERSION.SDK_INT >= 24 ) {//判断版本大于等于7.0 Build.VERSION_CODES.N
+            // "sven.com.fileprovider.fileprovider"即是在清单文件中配置的authorities
+            // 通过FileProvider创建一个content类型的Uri
+            uri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
+            intents.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);// 给目标应用一个临时授权
+        } else {
+            uri = Uri.fromFile(file);
+        }
+        intents.setDataAndType(uri, "application/vnd.android.package-archive");
         context.startActivity(intents);
-
     }
 
 
@@ -152,9 +167,9 @@ public class StartDownApkUtil {
                 if (TextUtils.isEmpty(sd)) {
                     return;
                 }
-                File file = new File(sd + "/gaomu/" + version + ".apk");
+                File file = new File(sd + "/"+directoryName+"/" + version + ".apk");
                 if (file.exists()) {
-                    StartDownApkUtil.installAPK(context, Uri.fromFile(file));
+                    StartDownApkUtil.installAPK(context, file);
                     StartDownApkUtil.stopDownApk(context);
                     return;
                 }
